@@ -1,0 +1,163 @@
+---
+# modbus connection to a DDS238-2 meter
+# register map eventually pulled together from various sources
+# Andrew Elwell <Andrew.Elwell@gmail.com>, Sept 2024
+# https://github.com/Elwell/ESPHome-DDS238
+
+esphome:
+  name: metering-1
+  friendly_name: DDS238-2 Metering
+  # area: Studio
+
+esp8266:
+  board: d1_mini
+
+status_led:
+  pin:
+    number: GPIO2
+    inverted: true
+
+logger:
+  level: INFO
+  baud_rate: 0
+
+api:
+  encryption:
+    key: !secret api_pw
+
+ota:
+  platform: esphome
+  password: !secret ota_pw
+
+wifi:
+  ssid: Telemetry_2G
+  password: !secret telemetry_pw
+  fast_connect: true
+  domain: .iot.elwell.au
+
+web_server:
+  port: 80
+
+prometheus:
+
+# Connect a max485 module to talk to Power Meter in studio
+uart:
+  tx_pin: GPIO1
+  rx_pin: GPIO3
+  baud_rate: 9600
+  id: u1
+
+modbus:
+  id: modbus1
+  uart_id: u1
+
+modbus_controller:
+  - id: dds238_studio
+    address: 0x1
+    modbus_id: modbus1
+    update_interval: 5s
+
+sensor:
+  - name: Total Energy
+    platform: modbus_controller
+    modbus_controller_id: dds238_studio
+    device_class: energy
+    state_class: total_increasing
+    unit_of_measurement: kWh
+    register_type: holding
+    address: 0
+    value_type: U_DWORD
+    accuracy_decimals: 2
+    filters:
+      - multiply: 0.01
+
+  - name: Export Energy
+    platform: modbus_controller
+    modbus_controller_id: dds238_studio
+    device_class: energy
+    state_class: total_increasing
+    unit_of_measurement: kWh
+    register_type: holding
+    address: 8
+    value_type: U_DWORD
+    accuracy_decimals: 2
+    filters:
+      - multiply: 0.01
+
+  - name: Import Energy
+    platform: modbus_controller
+    modbus_controller_id: dds238_studio
+    device_class: energy
+    state_class: total_increasing
+    unit_of_measurement: kWh
+    register_type: holding
+    address: 10
+    value_type: U_DWORD
+    accuracy_decimals: 2
+    filters:
+      - multiply: 0.01
+
+  - name: Voltage
+    platform: modbus_controller
+    modbus_controller_id: dds238_studio
+    device_class: voltage
+    unit_of_measurement: V
+    register_type: holding
+    address: 12
+    value_type: U_WORD
+    accuracy_decimals: 1
+    filters:
+      - multiply: 0.1
+
+  - name: Current
+    platform: modbus_controller
+    modbus_controller_id: dds238_studio
+    device_class: current
+    unit_of_measurement: A
+    register_type: holding
+    address: 13
+    value_type: U_WORD
+    accuracy_decimals: 2
+    filters:
+      - multiply: 0.01
+
+  - name: Power
+    platform: modbus_controller
+    modbus_controller_id: dds238_studio
+    device_class: power
+    unit_of_measurement: W
+    register_type: holding
+    address: 14
+    value_type: S_WORD
+
+  - name: Reactive Power
+    platform: modbus_controller
+    modbus_controller_id: dds238_studio
+    device_class: apparent_power
+    unit_of_measurement: VAr
+    register_type: holding
+    address: 15
+    value_type: U_WORD
+
+  - name: Power Factor
+    platform: modbus_controller
+    modbus_controller_id: dds238_studio
+    device_class: power_factor
+    unit_of_measurement: '%'
+    register_type: holding
+    address: 16
+    value_type: U_WORD
+    filters:
+      - multiply: 0.1
+
+  - name: Frequency
+    platform: modbus_controller
+    modbus_controller_id: dds238_studio
+    device_class: frequency
+    unit_of_measurement: Hz
+    register_type: holding
+    address: 17
+    value_type: U_WORD
+    accuracy_decimals: 2
+    filters:
+      - multiply: 0.01
