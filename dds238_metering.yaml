@@ -134,7 +134,7 @@ sensor:
     platform: modbus_controller
     modbus_controller_id: dds238_studio
     device_class: apparent_power
-    unit_of_measurement: VAr
+    unit_of_measurement: VA
     register_type: holding
     address: 15
     value_type: U_WORD
