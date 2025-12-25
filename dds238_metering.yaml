@@ -9,17 +9,14 @@ esphome:
   friendly_name: DDS238-2 Metering
   # area: Studio
 
-esp8266:
-  board: d1_mini
-
-status_led:
-  pin:
-    number: GPIO2
-    inverted: true
+esp32:
+  variant: esp32s3
+  framework:
+    type: esp-idf
+    version: recommended
 
 logger:
   level: INFO
-  baud_rate: 0
 
 api:
   encryption:
@@ -30,27 +27,36 @@ ota:
   password: !secret ota_pw
 
 wifi:
-  ssid: Telemetry_2G
-  password: !secret telemetry_pw
+  min_auth_mode: WPA2
   fast_connect: true
   domain: .iot.elwell.au
+  networks:
+    - ssid: Telemetry_2G
+      password: !secret telemetry_pw
+      hidden: true
+  enable_btm: true
+  enable_rrm: true
+
+network:
+  enable_ipv6: true
 
 web_server:
   port: 80
+  version: 3
 
 prometheus:
 
 # Connect a max485 module to talk to Power Meter in studio
 uart:
-  tx_pin: GPIO1
-  rx_pin: GPIO3
+  tx_pin: GPIO17
+  rx_pin: GPIO18
   baud_rate: 9600
   id: u1
 
 modbus:
   id: modbus1
   uart_id: u1
-
+  flow_control_pin: GPIO21
 modbus_controller:
   - id: dds238_studio
     address: 0x1
@@ -115,8 +121,8 @@ sensor:
     modbus_controller_id: dds238_studio
     device_class: current
     unit_of_measurement: A
-    state_class: measurement
     register_type: holding
+    state_class: measurement
     address: 13
     value_type: U_WORD
     accuracy_decimals: 2
